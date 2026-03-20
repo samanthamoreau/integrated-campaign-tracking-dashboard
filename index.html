@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tempo | Q1 2026 Campaign Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@font-face{font-family:'Messina Sans';src:local('Messina Sans'),local('MessinaSans');font-weight:400;font-style:normal}
+/* Messina Sans loaded via system if available; graceful fallback to similar geometric sans */
+</style>
+<style>
+:root{
+  /* Tempo brand palette */
+  --red:#F54D42;       --red-light:#FDECEA;
+  --purple:#9664FE;    --purple-dark:#6B3FCC;  --purple-mid:#B08AFE; --purple-light:#EEE6FF;
+  --yellow:#FFCC24;    --yellow-light:#FFF8D6;
+  --green:#02B78A;     --green-light:#CCFBEF;
+  --blush:#F9B6B0;     --blush-light:#FEF0EE;
+  --cyan:#69F6FF;      --cyan-light:#E0FDFF;
+  /* Neutrals */
+  --navy:#0F0F1A;      --navy-mid:#1E1E32;
+  --bg:#F7F6FB;        --surface:#FFF;        --surface2:#F4F3F9;
+  --text:#0F0F1A;      --text-muted:#5A5770;  --text-light:#9A98AC;
+  --border:#E3E1EE;    --border-light:#EDEBF5;
+  --shadow:0 1px 3px rgba(150,100,254,.07),0 4px 12px rgba(150,100,254,.04);
+  --shadow-lg:0 8px 32px rgba(150,100,254,.1);
+  --radius:12px;       --radius-lg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Messina Sans','MessinaSans',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 55%,#2A1A5E 100%);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.06)}
+.hdr-l{display:flex;align-items:center;gap:16px}
+.logo-img{height:28px;width:auto;display:block;filter:brightness(0) invert(1)}
+.logo-t{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.hdiv{width:1px;height:24px;background:rgba(255,255,255,.2)}
+.hsub{font-size:13px;color:rgba(255,255,255,.6)}
+.hdr-r{display:flex;align-items:center;gap:12px}
+.live{display:flex;align-items:center;gap:6px;background:rgba(2,183,138,.15);border:1px solid rgba(2,183,138,.3);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--green)}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.4)}}
+.upd{font-size:11px;color:rgba(255,255,255,.4)}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;overflow-x:auto}
+.ntab{padding:14px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.ntab:hover{color:var(--purple)}
+.ntab.active{color:var(--purple);border-bottom-color:var(--purple)}
+
+/* MAIN */
+.main{padding:28px 32px;max-width:1600px;margin:0 auto}
+.sec{margin-bottom:32px}
+.stitle{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.stitle::before{content:'';width:3px;height:18px;border-radius:2px;background:linear-gradient(180deg,var(--red),var(--purple))}
+.srow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+
+/* FILTER BAR */
+.fbar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px;box-shadow:var(--shadow)}
+.flbl{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.fsel{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 28px 6px 10px;font-size:13px;font-family:inherit;color:var(--text);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B5F8A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.sep{width:1px;height:20px;background:var(--border)}
+
+/* GAUGES */
+.ggrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.gcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 20px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.gcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--c1),var(--c2))}
+.glbl{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.gwrap{position:relative;width:120px;height:68px;margin:0 auto 6px}
+.gcanv{width:120px!important;height:68px!important;display:block}
+.gpct{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:17px;font-weight:700;color:var(--c1)}
+.gbot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:4px}
+.gact{font-size:21px;font-weight:700}
+.gtgt{font-size:11px;color:var(--text-muted);margin-top:1px}
+.gdlt{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.dup{background:var(--green-light);color:#017A5E}
+.ddn{background:var(--red-light);color:var(--red)}
+.dfl{background:var(--yellow-light);color:#8A6200}
+
+/* STATUS BADGE */
+.sbadge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.s-ahead{background:var(--green-light);color:#017A5E}
+.s-on{background:var(--green-light);color:#017A5E}
+.s-accel{background:var(--yellow-light);color:#8A6200}
+.s-risk{background:var(--blush-light);color:#C03020}
+.s-off{background:var(--red-light);color:#B52A20}
+.s-crit{background:var(--red-light);color:#8A1810}
+
+/* INFLUENCE */
+.igrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.icard{border-radius:var(--radius-lg);padding:26px 28px;color:#fff;box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+.icard::after{content:'';position:absolute;right:-24px;bottom:-24px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.04)}
+.ibadge{position:absolute;top:18px;right:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600}
+.ilbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ival{font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1.1}
+.isub{font-size:12px;color:rgba(255,255,255,.45);margin-top:5px}
+
+/* CHART CARDS */
+.ccard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
+.chead{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.ctitle{font-size:13px;font-weight:600;color:var(--text)}
+.csub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted)}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+/* TABLE */
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--border-light);color:var(--text);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600}
+.on-track{background:var(--green-light);color:#017A5E}
+.at-risk{background:var(--yellow-light);color:#8A6200}
+.behind{background:var(--red-light);color:var(--red)}
+
+/* CAMPAIGN PANELS */
+.ctabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.ctbtn{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-family:inherit;transition:all .2s}
+.ctbtn:hover{border-color:var(--purple);color:var(--purple)}
+.ctbtn.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+.cpanel{display:none}
+.cpanel.active{display:block}
+.c2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mrow{margin-bottom:12px}
+.mhdr{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.mname{color:var(--text-muted)}
+.mpct{font-weight:600;color:var(--text)}
+.ptr{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.pfill{height:100%;border-radius:3px;transition:width .7s ease}
+.mvals{display:flex;justify-content:space-between;font-size:11px;margin-top:3px}
+.vact{font-weight:600;color:var(--text)}
+.vtgt{color:var(--text-light)}
+
+/* CAMPAIGN DETAIL TABLE */
+.camp-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:16px}
+.camp-table th{padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--surface2)}
+.camp-table td{padding:8px 12px;border-bottom:1px solid var(--border-light)}
+.camp-table tr:last-child td{border-bottom:none}
+.camp-table tr:hover td{background:var(--bg)}
+
+/* CALLOUTS */
+.cogrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.co{border-radius:var(--radius);padding:18px 18px 16px;border:1px solid;display:flex;flex-direction:column;gap:8px}
+.co.good{background:var(--green-light);border-color:rgba(2,183,138,.3)}
+.co.bad{background:var(--red-light);border-color:rgba(245,77,66,.25)}
+.co.watch{background:var(--yellow-light);border-color:rgba(255,204,36,.4)}
+.co.neutral{background:var(--purple-light);border-color:rgba(150,100,254,.2)}
+.co-h{display:flex;align-items:center;gap:8px}
+.co-i{font-size:16px}
+.co-t{font-size:13px;font-weight:600}
+.co.good .co-t{color:#017A5E}
+.co.bad  .co-t{color:#B52A20}
+.co.watch .co-t{color:#8A6200}
+.co.neutral .co-t{color:var(--purple-dark)}
+.co-m{font-size:18px;font-weight:700}
+.co.good .co-m{color:#017A5E}
+.co.bad  .co-m{color:var(--red)}
+.co.watch .co-m{color:#C08A00}
+.co.neutral .co-m{color:var(--purple)}
+.co-b{font-size:12px;line-height:1.6}
+.co.good .co-b{color:#015040}
+.co.bad  .co-b{color:#7A1810}
+.co.watch .co-b{color:#6A4800}
+.co.neutral .co-b{color:var(--navy-mid)}
+
+/* TAB PANES */
+.tpane{display:none}
+.tpane.active{display:block}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.ggrid{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.main{padding:16px}.hdr{padding:14px 16px}.ggrid,.igrid,.g2,.g3,.c2col,.cogrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <img src="https://www.tempo.io/images/brand/tempo-full-logo.svg" alt="Tempo" class="logo-img">
+    <div class="hdiv"></div>
+    <span class="hsub">Q1 2026 Integrated Campaign Dashboard</span>
+  </div>
+  <div class="hdr-r">
+    <div class="live"><div class="ldot"></div>Live data</div>
+    <span class="upd">As of Week 12 · Mar 20 2026</span>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="ntab active" onclick="switchTab('overview')">Overview</div>
+  <div class="ntab" onclick="switchTab('weekly')">Week-by-Week</div>
+  <div class="ntab" onclick="switchTab('campaigns')">Campaign Breakdown</div>
+  <div class="ntab" onclick="switchTab('callouts')">Weekly Callouts</div>
+</nav>
+
+<main class="main">
+
+<!-- ═══════════ OVERVIEW ═══════════ -->
+<div class="tpane active" id="tab-overview">
+
+  <div class="fbar">
+    <span class="flbl">Week</span>
+    <select class="fsel" id="week-sel" onchange="onWkChange()">
+      <option value="11">Week 12 (Most Recent)</option>
+      <option value="10">Week 11</option>
+      <option value="9">Week 10</option>
+      <option value="8">Week 9</option>
+      <option value="7">Week 8</option>
+      <option value="6">Week 7</option>
+      <option value="5">Week 6</option>
+      <option value="4">Week 5</option>
+      <option value="3">Week 4</option>
+      <option value="2">Week 3</option>
+      <option value="1">Week 2</option>
+      <option value="0">Week 1</option>
+    </select>
+    <div class="sep"></div>
+    <span style="font-size:12px;color:var(--text-muted)">Q1 through Week 12 · 87% of quarter elapsed</span>
+  </div>
+
+  <div class="sec">
+    <div class="srow">
+      <h2 class="stitle">Q1 Progress to Targets</h2>
+      <div style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text-muted)">
+        Overall status:
+        <span class="sbadge s-accel" id="overall-status">Needs Acceleration</span>
+      </div>
+    </div>
+    <div class="ggrid" id="gauges"></div>
+  </div>
+
+  <div class="sec">
+    <h2 class="stitle">WoW Summary Table</h2>
+    <div class="ccard">
+      <div class="twrap">
+        <table id="wow-table">
+          <thead><tr>
+            <th>Week</th><th>Leads</th><th>MQLs</th><th>MQL %</th>
+            <th>Sourced Opps</th><th>Sourced Pipeline</th>
+            <th>Inf. Opps</th><th>Inf. Pipeline</th><th>Lead Pacing</th>
+          </tr></thead>
+          <tbody id="wow-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ WEEKLY ═══════════ -->
+<div class="tpane" id="tab-weekly">
+  <div class="sec">
+    <h2 class="stitle">Leads &amp; MQLs — Week by Week</h2>
+    <div class="g2">
+      <div class="ccard">
+        <div class="chead"><div><div class="ctitle">Weekly Leads</div><div class="csub">Actual vs weekly target pace (964/wk)</div></div>
+        <div class="legend"><div class="li"><div class="ld" style="background:#9664FE"></div>Actual</div><div class="li"><div class="ld" style="background:#9664FE60;border:1px dashed #9664FE"></div>Target</div></div></div>
+        <div style="position:relative;height:220px"><canvas id="c-leads"></canvas></div>
+      </div>
+      <div class="ccard">
+        <div class="chead"><div><div class="ctitle">Weekly MQLs</div><div class="csub">Actual vs weekly target pace (212/wk)</div></div>
+        <div class="legend"><div class="li"><div class="ld" style="background:#F54D42"></div>Actual</div><div class="li"><div class="ld" style="background:#F54D4260;border:1px dashed #F54D42"></div>Target</div></div></div>
+        <div style="position:relative;height:220px"><canvas id="c-mqls"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <h2 class="stitle">Sourced Opps &amp; Pipeline — Week by Week</h2>
+    <div class="g2">
+      <div class="ccard">
+        <div class="chead"><div><div class="ctitle">Sourced Opps</div><div class="csub">Actual vs weekly target pace (20/wk)</div></div></div>
+        <div style="position:relative;height:220px"><canvas id="c-srcO"></canvas></div>
+      </div>
+      <div class="ccard">
+        <div class="chead"><div><div class="ctitle">Sourced Pipeline ($)</div><div class="csub">Actual vs weekly target pace ($294K/wk)</div></div></div>
+        <div style="position:relative;height:220px"><canvas id="c-srcP"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <h2 class="stitle">Influenced Opps &amp; Pipeline — Week by Week</h2>
+    <div class="g2">
+      <div class="ccard">
+        <div class="chead"><div><div class="ctitle">Influenced Opps</div><div class="csub">Cumulative actuals by week</div></div></div>
+        <div style="position:relative;height:220px"><canvas id="c-infO"></canvas></div>
+      </div>
+      <div class="ccard">
+        <div class="chead"><div><div class="ctitle">Influenced Pipeline ($)</div><div class="csub">Cumulative actuals by week</div></div></div>
+        <div style="position:relative;height:220px"><canvas id="c-infP"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CAMPAIGNS ═══════════ -->
+<div class="tpane" id="tab-campaigns">
+  <div class="sec">
+    <h2 class="stitle">Campaign Type Breakdown — Actuals vs Targets</h2>
+    <div class="ctabs" id="camp-tabs"></div>
+    <div id="camp-panels"></div>
+  </div>
+  <div class="sec">
+    <h2 class="stitle">All Campaign Types — Side-by-Side Comparison</h2>
+    <div class="ccard"><div style="position:relative;height:300px"><canvas id="c-cmp"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ═══════════ CALLOUTS ═══════════ -->
+<div class="tpane" id="tab-callouts">
+  <div class="sec">
+    <div class="srow">
+      <h2 class="stitle">Weekly Performance Callouts</h2>
+      <select class="fsel" id="co-sel" onchange="renderCallouts()">
+        <option value="11">Week 12 (Most Recent)</option>
+        <option value="10">Week 11</option>
+        <option value="9">Week 10</option>
+        <option value="8">Week 9</option>
+        <option value="7">Week 8</option>
+        <option value="6">Week 7</option>
+        <option value="5">Week 6</option>
+        <option value="4">Week 5</option>
+        <option value="3">Week 4</option>
+        <option value="2">Week 3</option>
+        <option value="1">Week 2</option>
+      </select>
+    </div>
+    <div class="cogrid" id="co-grid"></div>
+  </div>
+  <div class="sec">
+    <h2 class="stitle">Week-over-Week % Change</h2>
+    <div class="ccard"><div style="position:relative;height:260px"><canvas id="c-delta"></canvas></div></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════
+// REAL DATA — parsed directly from xlsx
+// ════════════════════════════════════════════════
+const WK = ['Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7','Week 8','Week 9','Week 10','Week 11','Week 12'];
+
+// Q1 Targets (from WoW Analysis)
+const T = { leads:13500, mqls:2970, srcOpps:275, srcPipe:4120875, wkLeads:964.29, wkMqls:212.14, wkSrcO:19.64, wkSrcP:294348 };
+
+// QTD totals (from WoW Analysis totals rows)
+const QTD = {
+  leads: 10870, mqls: 2986, srcOpps: 141, srcPipe: 1747213.01,
+  infOpps: 337,  infPipe: 5814000.78,
+  leadStatus: 'Needs Acceleration', mqlStatus: 'Ahead of Plan',
+  srcOStatus: 'Off Track', srcPStatus: 'Critical Gap'
+};
+
+// Derive pacing status for influenced vs sourced targets
+function paceStatus(act, tgt, qProg) {
+  const ratio = qProg > 0 ? (act/tgt)/qProg : act/tgt;
+  if(ratio >= 1.1)  return 'Ahead of Plan';
+  if(ratio >= 0.95) return 'On Track';
+  if(ratio >= 0.85) return 'Needs Acceleration';
+  if(ratio >= 0.70) return 'At Risk';
+  if(ratio >= 0.50) return 'Off Track';
+  return 'Critical Gap';
+}
+const Q_PROG = 0.8667;
+QTD.oppsStatus = paceStatus(QTD.infOpps, T.srcOpps, Q_PROG);
+QTD.pipeStatus = paceStatus(QTD.infPipe, T.srcPipe, Q_PROG);
+
+// Weekly actuals — Leads (Source Data row 48, cols 1-12)
+const wLeads = [510,5622,5791,5771,6200,6738,4905,4441,6264,4864,4457,4509];
+// Weekly actuals — MQLs (Source Data row 97, cols 1-12)
+const wMqls  = [9,427,417,386,344,340,249,123,151,91,354,95];
+// Weekly actuals — Sourced Opps (WoW Analysis col N rows 2-13)
+const wSrcO  = [2,4,19,10,15,13,12,12,8,15,13,18];
+// Weekly actuals — Sourced Pipeline (WoW Analysis MQL section col N rows 19-30)
+const wSrcP  = [4480,53015,196759.68,130219,171862.42,118039.2,117919.49,147391.94,62365,284924.32,204509.81,255727.15];
+// Weekly actuals — Influenced Opps (WoW Analysis col S rows 2-13)
+const wInfO  = [7,24,41,28,40,31,33,21,15,23,46,28];
+// Weekly actuals — Influenced Pipeline (WoW Analysis col S rows 19-30)
+const wInfP  = [12540.31,444680.32,487865.3,447793.17,636658.31,304013.1,593899.13,363915,188099.56,576482.45,1173118.58,584935.55];
+
+// Campaign data (from each tab totals row — last row with N/A in col B)
+const CAMPS = [
+  { key:'trials',  label:'Trials, Demos & Always On', short:'Trials',  color:'#9664FE', tag:'Always-On',
+    lA:4860,  lT:0,     mA:1066, mT:900,  oA:100, oT:188,  pA:1173890,  pT:1655000,
+    iO:198, iP:2651006,
+    rows:[
+      {name:'Portfolio Manager Trials',            lA:61,   mA:0,   oA:1,  pA:1680},
+      {name:'Strategic Roadmaps Trials',           lA:1793, mA:1,   oA:6,  pA:15513},
+      {name:'Trial - Power BI (ServiceNow)',        lA:1,    mA:0,   oA:0,  pA:0},
+      {name:'AMP Trials (In-app)',                 lA:49202,mA:4,   oA:8,  pA:91196.68},
+      {name:'Demo Requests',                       lA:2098, mA:621, oA:82, pA:1095118.9},
+      {name:'Get Started',                         lA:907,  mA:444, oA:11, pA:61578.1},
+    ]},
+  { key:'collections', label:'Collections', short:'Collections', color:'#F54D42', tag:'Content',
+    lA:1264, lT:0,  mA:222, mT:200, oA:10, oT:10, pA:172993.3, pT:250000,
+    iO:25, iP:307766.27,
+    rows:[
+      {name:'SPM for Jira Collection',             lA:5,   mA:0,  oA:0, pA:0},
+      {name:'Program Collection Submissions',      lA:302, mA:61, oA:3, pA:58280},
+      {name:'Project Collection Submissions',      lA:788, mA:116,oA:4, pA:47323.3},
+      {name:'Portfolio Collection Submissions',    lA:72,  mA:10, oA:1, pA:0},
+      {name:'General Collections Inquiry',         lA:70,  mA:19, oA:2, pA:67390},
+      {name:'In-App Collections Inquiry',          lA:27,  mA:16, oA:0, pA:0},
+    ]},
+  { key:'webinars', label:'Webinars', short:'Webinars', color:'#02B78A', tag:'Events',
+    lA:3582, lT:0, mA:1598, mT:1800, oA:20, oT:50, pA:301462.62, pT:780000,
+    iO:85, iP:2291959.76,
+    rows:[
+      {name:'1/14 Why your 2026 plan will break',        lA:838, mA:598,oA:7, pA:63404.14},
+      {name:'1/28 SPM Trends in 2026',                   lA:887, mA:504,oA:6, pA:72793.92},
+      {name:'2/11 Unlock 2026 State of SPM',             lA:457, mA:262,oA:2, pA:58670},
+      {name:'2/25 Cloud Migration Catalyst',             lA:110, mA:66, oA:3, pA:63999.56},
+      {name:'3/11 How TransUnion saved $1M',             lA:431, mA:168,oA:2, pA:42595},
+      {name:'3/18 Atlassian AI experiments',             lA:0,   mA:0,  oA:0, pA:0},
+      {name:'3/18 Partner Strategy series',              lA:15,  mA:0,  oA:0, pA:0},
+      {name:'3/19 Unlock Tempo Timesheets',              lA:844, mA:0,  oA:0, pA:0},
+      {name:'3/24 Scaling delivery intelligence',        lA:46,  mA:0,  oA:0, pA:0},
+    ]},
+  { key:'gated', label:'Gated Content', short:'Gated', color:'#FFCC24', tag:'Content',
+    lA:424, lT:0, mA:81, mT:20, oA:0, oT:2, pA:0, pT:10000,
+    iO:7, iP:191900.66,
+    rows:[
+      {name:'2026 State of SPM Report',                  lA:268, mA:77, oA:0, pA:0},
+      {name:'Modern guide to cloud transformation',      lA:26,  mA:1,  oA:0, pA:0},
+      {name:'SPM (Strategy) Collection Guide',           lA:24,  mA:2,  oA:0, pA:0},
+      {name:'Program Collection Guide',                  lA:5,   mA:0,  oA:0, pA:0},
+      {name:'Project Collection Guide',                  lA:24,  mA:1,  oA:0, pA:0},
+      {name:'Portfolio Collection Guide',                lA:7,   mA:0,  oA:0, pA:0},
+      {name:'Ultimate guide to product prioritization',  lA:70,  mA:0,  oA:0, pA:0},
+    ]},
+  { key:'paid', label:'Paid', short:'Paid', color:'#F9B6B0', tag:'Paid',
+    lA:377, lT:0, mA:10, mT:0, oA:0, oT:0, pA:0, pT:0,
+    iO:1, iP:23220,
+    rows:[
+      {name:'Meta – Perfect planned vs actual',          lA:115, mA:0,  oA:0, pA:0},
+      {name:'Google Ads – Timesheets Demo',              lA:3,   mA:1,  oA:0, pA:0},
+      {name:'Meta – Portfolio Collection',               lA:81,  mA:0,  oA:0, pA:0},
+      {name:'State of SPM – LLF',                       lA:45,  mA:0,  oA:0, pA:0},
+      {name:'TransUnion Webinar – LLF',                  lA:9,   mA:4,  oA:0, pA:0},
+      {name:'2/4 TT – Cloud Transformation guide',       lA:37,  mA:0,  oA:0, pA:0},
+      {name:'2/4 TT – The SPM Journey',                  lA:61,  mA:0,  oA:0, pA:0},
+      {name:'InMail Demo Request Get Started',           lA:26,  mA:5,  oA:0, pA:0},
+    ]},
+  { key:'events', label:'Events', short:'Events', color:'#69F6FF', tag:'Field',
+    lA:54, lT:0, mA:3, mT:25, oA:0, oT:10, pA:0, pT:350000,
+    iO:2, iP:80110,
+    rows:[
+      {name:'2/11 Team on Tour: Government',             lA:13, mA:0, oA:0, pA:0},
+      {name:'3/16 catworkx Road Show',                   lA:0,  mA:0, oA:0, pA:0},
+      {name:'3/24 Partner Enablement Day Munich',        lA:36, mA:3, oA:0, pA:0},
+      {name:'3/24 Praecipio Spring TrAIning',            lA:0,  mA:0, oA:0, pA:0},
+      {name:'3/25 Atlassian SM Executive Summit',        lA:0,  mA:0, oA:0, pA:0},
+      {name:'1/20 RKO Partner Enablement Day',           lA:5,  mA:0, oA:0, pA:0},
+    ]},
+  { key:'other', label:'Other Campaigns', short:'Other', color:'#9A98AC', tag:'Other',
+    lA:263, lT:0, mA:6, mT:25, oA:11, oT:15, pA:98867.09, pT:30000,
+    iO:19, iP:268038.09,
+    rows:[
+      {name:'AI BDR',                                    lA:10,  mA:0, oA:3,  pA:7735.15},
+      {name:'Warmly Website Chat',                       lA:211, mA:6, oA:3,  pA:29141.94},
+      {name:'Trial Start Contacts from Accounts',        lA:12,  mA:0, oA:5,  pA:61990},
+      {name:'Adaptive Planner & Insights Waitlist',      lA:30,  mA:0, oA:0,  pA:0},
+    ]},
+];
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+const fK = (v,cur=false,dec=0) => {
+  if(!v&&v!==0)return cur?'$0':'0';
+  const n=Number(v);
+  if(Math.abs(n)>=1e6)return(cur?'$':'')+(n/1e6).toFixed(1)+'M';
+  if(Math.abs(n)>=1e3)return(cur?'$':'')+(n/1e3).toFixed(dec>0?dec:0)+'K';
+  return(cur?'$':'')+Math.round(n).toLocaleString();
+};
+const pc = (a,b) => b?Math.round((a/b)*100):0;
+let CH = {};
+const mk = (id,cfg) => { if(CH[id])CH[id].destroy(); const c=document.getElementById(id); if(!c)return; CH[id]=new Chart(c,cfg); };
+
+// ════════════════════════════════════════════════
+// GAUGES
+// ════════════════════════════════════════════════
+const GD = [
+  {k:'leads',  lbl:'Leads',    act:QTD.leads,   tgt:T.leads,    c1:'#9664FE',c2:'#B08AFE',cur:false, status:QTD.leadStatus},
+  {k:'mqls',   lbl:'MQLs',     act:QTD.mqls,    tgt:T.mqls,     c1:'#F54D42',c2:'#F9B6B0',cur:false, status:QTD.mqlStatus},
+  {k:'srcOpps',lbl:'Opps',     act:QTD.infOpps, tgt:T.srcOpps,  c1:'#02B78A',c2:'#69F6FF',cur:false, status:QTD.oppsStatus},
+  {k:'srcPipe',lbl:'Pipeline', act:QTD.infPipe, tgt:T.srcPipe,  c1:'#FFCC24',c2:'#FFE066',cur:true,  status:QTD.pipeStatus},
+];
+
+function statusClass(s){
+  if(!s)return 's-on';
+  const l=s.toLowerCase();
+  if(l.includes('ahead'))return 's-ahead';
+  if(l.includes('on track'))return 's-on';
+  if(l.includes('acceleration'))return 's-accel';
+  if(l.includes('at risk'))return 's-risk';
+  if(l.includes('off track'))return 's-off';
+  if(l.includes('critical'))return 's-crit';
+  return 's-on';
+}
+
+let activeWk = 11; // 0-indexed, default Week 12
+
+function renderGauges(){
+  const g=document.getElementById('gauges'); g.innerHTML='';
+  GD.forEach(def=>{
+    const p=Math.min(pc(def.act,def.tgt),100), rp=pc(def.act,def.tgt);
+    const wArr=def.k==='leads'?wLeads:def.k==='mqls'?wMqls:def.k==='srcOpps'?wInfO:wInfP;
+    const cv=wArr[activeWk]||0, pv=activeWk>0?(wArr[activeWk-1]||0):0;
+    const dl=pv>0?Math.round(((cv-pv)/pv)*100):0;
+    const dc=dl>0?'dup':dl<0?'ddn':'dfl', ds=dl>0?'▲':dl<0?'▼':'—';
+    const sc=statusClass(def.status);
+    const card=document.createElement('div');
+    card.className='gcard'; card.style.cssText=`--c1:${def.c1};--c2:${def.c2}`;
+    card.innerHTML=`
+      <div class="glbl">${def.lbl}</div>
+      <div class="gwrap"><canvas class="gcanv" id="g-${def.k}"></canvas><div class="gpct">${rp}%</div></div>
+      <div class="gbot">
+        <div>
+          <div class="gact">${def.cur?fK(def.act,true):fK(def.act)}</div>
+          <div class="gtgt">of ${def.cur?fK(def.tgt,true):fK(def.tgt)} plan${(def.k==='srcOpps'||def.k==='srcPipe')?' · influenced':''}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="sbadge ${sc}" style="font-size:10px">${def.status}</span>
+          ${dl!==0?`<span class="gdlt ${dc}">${ds} ${Math.abs(dl)}% WoW</span>`:''}
+        </div>
+      </div>`;
+    g.appendChild(card);
+    requestAnimationFrame(()=>arc(`g-${def.k}`,p,def.c1,def.c2));
+  });
+}
+
+function arc(id,p,c1,c2){
+  const el=document.getElementById(id); if(!el)return;
+  const W=120,H=68,dpr=2; el.width=W*dpr; el.height=H*dpr;
+  const ctx=el.getContext('2d'); ctx.scale(dpr,dpr);
+  const cx=W/2,cy=H-2,r=46,sa=Math.PI,ea=2*Math.PI;
+  ctx.beginPath();ctx.arc(cx,cy,r,sa,ea);ctx.strokeStyle='#EEE6FF';ctx.lineWidth=9;ctx.lineCap='round';ctx.stroke();
+  const f=sa+(ea-sa)*(p/100);
+  const gr=ctx.createLinearGradient(cx-r,cy,cx+r,cy);gr.addColorStop(0,c1);gr.addColorStop(1,c2);
+  ctx.beginPath();ctx.arc(cx,cy,r,sa,f);ctx.strokeStyle=gr;ctx.lineWidth=9;ctx.lineCap='round';ctx.stroke();
+}
+
+// ════════════════════════════════════════════════
+// SUMMARY TABLE
+// ════════════════════════════════════════════════
+function renderSummaryTable(){
+  const wkTarget=T.wkLeads;
+  let html='';
+  WK.forEach((w,i)=>{
+    const l=wLeads[i],m=wMqls[i],sO=wSrcO[i],sP=wSrcP[i],iO=wInfO[i],iP=wInfP[i];
+    const mr=l>0?Math.round((m/l)*100):0;
+    const pace=Math.round((l/wkTarget)*100);
+    const [sc,st]=pace>=110?['on-track','Ahead']:pace>=85?['on-track','On Track']:pace>=70?['at-risk','At Risk']:['behind','Behind'];
+    const hl=i===activeWk;
+    html+=`<tr style="${hl?'background:var(--purple-light)':''}">
+      <td><strong>${w}</strong>${hl?' <span style="font-size:10px;color:var(--purple)">◀</span>':''}</td>
+      <td>${fK(l)}</td><td>${fK(m)}</td><td>${mr}%</td>
+      <td>${sO}</td><td>${fK(sP,true)}</td>
+      <td>${iO}</td><td>${fK(iP,true)}</td>
+      <td><span class="pill ${sc}">${st} (${pace}%)</span></td>
+    </tr>`;
+  });
+  document.getElementById('wow-tbody').innerHTML=html;
+}
+
+function onWkChange(){
+  activeWk=parseInt(document.getElementById('week-sel').value);
+  renderGauges(); renderSummaryTable(); renderCallouts();
+}
+
+// ════════════════════════════════════════════════
+// WEEKLY CHARTS
+// ════════════════════════════════════════════════
+function weeklyCharts(){
+  const lbls=WK.map(w=>w.replace('Week ','Wk '));
+  const opts=(cur,tgt)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${cur?fK(ctx.raw,true):fK(ctx.raw)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#9A98AC'}},y:{grid:{color:'#E3E1EE',lineWidth:.5},ticks:{font:{size:11},color:'#9A98AC',callback:v=>cur?fK(v,true):fK(v)}}}});
+
+  const bar=(data,color,tgtVal,cur)=>[
+    {label:'Actual',data,backgroundColor:color+'33',borderColor:color,borderWidth:2,borderRadius:4,type:'bar'},
+    ...(tgtVal?[{label:'Target',data:data.map(()=>Math.round(tgtVal)),type:'line',borderColor:color+'70',borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false,tension:0}]:[])
+  ];
+
+  mk('c-leads',{type:'bar',data:{labels:lbls,datasets:bar(wLeads,'#9664FE',T.wkLeads,false)},options:opts(false)});
+  mk('c-mqls', {type:'bar',data:{labels:lbls,datasets:bar(wMqls, '#F54D42',T.wkMqls, false)},options:opts(false)});
+  mk('c-srcO', {type:'bar',data:{labels:lbls,datasets:bar(wSrcO, '#02B78A',T.wkSrcO, false)},options:opts(false)});
+  mk('c-srcP', {type:'bar',data:{labels:lbls,datasets:bar(wSrcP, '#FFCC24',T.wkSrcP, true)}, options:opts(true)});
+  mk('c-infO', {type:'bar',data:{labels:lbls,datasets:[{label:'Influenced Opps',data:wInfO,backgroundColor:'#F9B6B066',borderColor:'#F9B6B0',borderWidth:2,borderRadius:4}]},options:opts(false)});
+  mk('c-infP', {type:'bar',data:{labels:lbls,datasets:[{label:'Influenced Pipeline',data:wInfP,backgroundColor:'#69F6FF44',borderColor:'#69F6FF',borderWidth:2,borderRadius:4}]},options:opts(true)});
+}
+
+// ════════════════════════════════════════════════
+// CAMPAIGN PANELS
+// ════════════════════════════════════════════════
+function renderCampaigns(){
+  const tabsEl=document.getElementById('camp-tabs'), pnlEl=document.getElementById('camp-panels');
+  tabsEl.innerHTML=''; pnlEl.innerHTML='';
+  const cmpL=[],cmpM=[],cmpO=[],cmpP=[];
+
+  CAMPS.forEach((c,idx)=>{
+    cmpL.push(c.lA); cmpM.push(c.mA); cmpO.push(c.oA); cmpP.push(c.pA);
+
+    // Tab button
+    const btn=document.createElement('button');
+    btn.className='ctbtn'+(idx===0?' active':'');
+    btn.textContent=c.short;
+    btn.onclick=()=>{
+      document.querySelectorAll('.ctbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+      document.querySelectorAll('.cpanel').forEach(p=>p.classList.remove('active'));
+      document.getElementById(`cp-${c.key}`).classList.add('active');
+    };
+    tabsEl.appendChild(btn);
+
+    // Metric summary
+    const metrics=[
+      {lbl:'Leads',    a:c.lA,t:c.lT,cur:false},
+      {lbl:'MQLs',     a:c.mA,t:c.mT,cur:false},
+      {lbl:'Srcd Opps',a:c.oA,t:c.oT,cur:false},
+      {lbl:'Srcd Pipe',a:c.pA,t:c.pT,cur:true},
+      {lbl:'Inf. Opps',a:c.iO,t:0,   cur:false},
+      {lbl:'Inf. Pipeline',a:c.iP,t:0,cur:true},
+    ].map(m=>{
+      const hasTgt=m.t>0;
+      const p=hasTgt?Math.min(pc(m.a,m.t),100):null;
+      const barW=hasTgt?p:100;
+      return `<div class="mrow">
+        <div class="mhdr"><span class="mname">${m.lbl}</span><span class="mpct">${hasTgt?p+'% to target':'Actuals only'}</span></div>
+        <div class="ptr"><div class="pfill" style="width:${barW||2}%;background:${c.color}"></div></div>
+        <div class="mvals">
+          <span class="vact">${m.cur?fK(m.a,true):fK(m.a)}</span>
+          ${hasTgt?`<span class="vtgt">Target: ${m.cur?fK(m.t,true):fK(m.t)}</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+    // Detail table
+    const tbl=`<div class="twrap"><table class="camp-table">
+      <thead><tr><th>Campaign / Tactic</th><th>Leads</th><th>MQLs</th><th>MQL%</th><th>Srcd Opps</th><th>Srcd Pipeline</th></tr></thead>
+      <tbody>${c.rows.map(r=>`<tr>
+        <td>${r.name}</td>
+        <td>${fK(r.lA)}</td>
+        <td>${fK(r.mA)}</td>
+        <td>${r.lA>0?Math.round(r.mA/r.lA*100)+'%':'—'}</td>
+        <td>${r.oA}</td>
+        <td>${fK(r.pA,true)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+
+    const pnl=document.createElement('div');
+    pnl.className='cpanel'+(idx===0?' active':''); pnl.id=`cp-${c.key}`;
+    pnl.innerHTML=`<div class="c2col">
+      <div class="ccard">
+        <div class="chead">
+          <div><div class="ctitle" style="color:${c.color}">${c.label}</div><div class="csub">Q1 2026 actuals vs targets</div></div>
+          <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${c.color}18;color:${c.color}">${c.tag}</span>
+        </div>
+        ${metrics}
+      </div>
+      <div class="ccard">
+        <div class="chead"><div><div class="ctitle">MQL conversion rate</div><div class="csub">Leads → MQLs by campaign</div></div></div>
+        <div style="position:relative;height:200px"><canvas id="cc-${c.key}"></canvas></div>
+      </div>
+    </div>${tbl}`;
+    pnlEl.appendChild(pnl);
+
+    // Mini bar chart for each campaign's lead/mql breakdown
+    setTimeout(()=>{
+      mk(`cc-${c.key}`,{type:'bar',
+        data:{labels:c.rows.map(r=>r.name.length>22?r.name.slice(0,22)+'…':r.name),datasets:[
+          {label:'Leads',data:c.rows.map(r=>r.lA),backgroundColor:c.color+'44',borderColor:c.color,borderWidth:1.5,borderRadius:3},
+          {label:'MQLs', data:c.rows.map(r=>r.mA),backgroundColor:c.color+'88',borderRadius:3},
+        ]},
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:true,labels:{boxWidth:8,font:{size:10},color:'#9A98AC'}}},
+          scales:{x:{grid:{color:'#E3E1EE',lineWidth:.5},ticks:{font:{size:10},color:'#9A98AC'}},y:{grid:{display:false},ticks:{font:{size:10},color:'#9A98AC'}}}}
+      });
+    },60);
+  });
+
+  // Comparison chart
+  mk('c-cmp',{type:'bar',
+    data:{labels:CAMPS.map(c=>c.short),datasets:[
+      {label:'Leads',         data:cmpL,backgroundColor:'#9664FE99',borderRadius:4},
+      {label:'MQLs',          data:cmpM,backgroundColor:'#F54D4299',borderRadius:4},
+      {label:'Sourced Opps',  data:cmpO,backgroundColor:'#02B78A99',borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:11},color:'#5A5770'}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#9A98AC'}},y:{grid:{color:'#E3E1EE',lineWidth:.5},ticks:{font:{size:11},color:'#9A98AC'}}}}
+  });
+}
+
+// ════════════════════════════════════════════════
+// CALLOUTS
+// ════════════════════════════════════════════════
+function renderCallouts(){
+  const i=parseInt(document.getElementById('co-sel')?.value??11);
+  const l=wLeads[i],m=wMqls[i],sO=wSrcO[i],sP=wSrcP[i],iO=wInfO[i],iP=wInfP[i];
+  const pl=i>0?wLeads[i-1]:0, pm=i>0?wMqls[i-1]:0, pp=i>0?wSrcP[i-1]:0;
+  const mr=l>0?Math.round(m/l*100):0;
+  const dl=pl>0?Math.round((l-pl)/pl*100):0;
+  const dp=pp>0?Math.round((sP-pp)/pp*100):0;
+  const pace=Math.round(l/T.wkLeads*100);
+  const cos=[];
+
+  // Lead volume
+  if(dl>10)cos.push({t:'good',i:'📈',title:`Leads up ${dl}% WoW`,metric:fK(l)+' leads',body:`Strong week — up from ${fK(pl)}. Top-of-funnel momentum building.`});
+  else if(dl<-15)cos.push({t:'bad',i:'📉',title:`Lead volume down ${Math.abs(dl)}%`,metric:dl+'% WoW',body:`Dropped from ${fK(pl)} to ${fK(l)}. Review campaign pacing and budget.`});
+  else if(dl!==0)cos.push({t:'watch',i:'➡️',title:`Leads ${dl>0?'+':''}${dl}% WoW`,metric:fK(l)+' leads',body:`Lead volume ${dl>0?'slightly up':'roughly flat'} vs prior week. ${fK(pl)} last week.`});
+
+  // MQL rate
+  if(mr>=28)cos.push({t:'good',i:'✅',title:'Strong MQL conversion',metric:mr+'% MQL rate',body:`Above the 25% benchmark. Lead quality is excellent — strong marketing/sales alignment.`});
+  else if(mr>0&&mr<18)cos.push({t:'bad',i:'⚠️',title:'MQL rate below benchmark',metric:mr+'% MQL rate',body:`At ${mr}% vs 25% target. Review lead scoring and SDR follow-up speed.`});
+  else if(mr>=18)cos.push({t:'watch',i:'👀',title:'MQL rate near target',metric:mr+'% MQL rate',body:`At ${mr}% — approaching the 25% benchmark. Small quality improvements could push over.`});
+
+  // Pipeline
+  if(dp>15)cos.push({t:'good',i:'💰',title:'Pipeline surging',metric:fK(sP,true),body:`Sourced pipeline up ${dp}% WoW. ${sO} new opps this week.`});
+  else if(dp<-20&&pp>0)cos.push({t:'bad',i:'🔻',title:'Pipeline generation slowing',metric:dp+'% WoW',body:`Dropped from ${fK(pp,true)} to ${fK(sP,true)}. Check deal velocity and attribution.`});
+
+  // Influenced
+  if(iP>0)cos.push({t:'neutral',i:'🔗',title:'Influenced pipeline active',metric:fK(iP,true),body:`${iO} influenced opps contributing ${fK(iP,true)}. Multi-touch attribution working.`});
+
+  // Pacing
+  if(pace<70)cos.push({t:'bad',i:'🎯',title:'Behind weekly lead target',metric:pace+'% of target',body:`${fK(l)} leads vs ${fK(T.wkLeads)} weekly target. Accelerate programs to close gap.`});
+  else if(pace>=110)cos.push({t:'good',i:'🎯',title:'Ahead of weekly lead pace',metric:pace+'% of target',body:`${fK(l)} leads vs ${fK(T.wkLeads)} target — ${pace-100}% ahead of pace.`});
+
+  while(cos.length<3)cos.push({t:'neutral',i:'📊',title:'Funnel snapshot',metric:`${fK(l)} → ${fK(m)}`,body:`${mr}% lead-to-MQL, ${sO} sourced opps, ${fK(iP,true)} influenced pipeline for ${WK[i]}.`});
+
+  document.getElementById('co-grid').innerHTML=cos.slice(0,6).map(c=>`
+    <div class="co ${c.t}">
+      <div class="co-h"><span class="co-i">${c.i}</span><span class="co-t">${c.title}</span></div>
+      <div class="co-m">${c.metric}</div>
+      <div class="co-b">${c.body}</div>
+    </div>`).join('');
+}
+
+// WoW delta chart
+function renderDelta(){
+  const lbls=WK.map(w=>w.replace('Week ','Wk '));
+  const mkD=arr=>arr.map((v,i)=>i>0&&arr[i-1]>0?Math.round((v-arr[i-1])/arr[i-1]*100):0);
+  mk('c-delta',{type:'line',data:{labels:lbls,datasets:[
+    {label:'Leads',       data:mkD(wLeads),borderColor:'#9664FE',backgroundColor:'#9664FE15',borderWidth:2,pointRadius:4,tension:.3,fill:false},
+    {label:'MQLs',        data:mkD(wMqls), borderColor:'#F54D42',backgroundColor:'#F54D4215',borderWidth:2,pointRadius:4,tension:.3,fill:false},
+    {label:'Sourced Opps',data:mkD(wSrcO), borderColor:'#02B78A',backgroundColor:'#02B78A15',borderWidth:2,pointRadius:4,tension:.3,fill:false},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{boxWidth:10,font:{size:11},color:'#5A5770'}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#9A98AC'}},
+      y:{grid:{color:'#E3E1EE',lineWidth:.5},ticks:{font:{size:11},color:'#9A98AC',callback:v=>v+'%'}}}
+  }});
+}
+
+// ════════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════════
+function switchTab(id){
+  const ids=['overview','weekly','campaigns','callouts'];
+  document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('active',ids[i]===id));
+  document.querySelectorAll('.tpane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+id));
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+renderGauges();
+renderSummaryTable();
+weeklyCharts();
+renderCampaigns();
+renderCallouts();
+renderDelta();
+</script>
+</body>
+</html>
